@@ -20,26 +20,41 @@ The dataset contains customer information with the following key columns:
 - **Kidhome/Teenhome**: Number of kids/teens in household
 - **Dt_Customer**: Date of customer enrollment
 - **Recency**: Days since last purchase
-- **MntWines, MntFruits, etc.**: Amount spent on various product categories
+- **MntWines, MntFruits, etc.**: Amount spent on various product categories in last 2 years
 - **NumDealsPurchases, NumWebPurchases, etc.**: Purchase channels
 - **AcceptedCmp1-5**: Campaign acceptance (0/1)
-- **Response**: Response to the latest campaign (0/1)
+- **Response**: Customer accepted the offer in the last campaign (0/1)
 
 ### Data Cleaning Steps
-1. **Missing Values**:
-   - Identified missing values in `Income` (e.g., empty strings). Imputed with median income grouped by `Education` and `Marital_Status` to preserve distribution.
-   - No other critical columns showed missing data.
-2. **Data Types**:
-   - Converted `Year_Birth` to age (as of March 21, 2025).
-   - Ensured `Dt_Customer` is in datetime format for time-based analysis.
-   - Converted categorical variables (`Education`, `Marital_Status`) to category type.
-3. **Outliers**:
-   - Detected extreme values in `Income` (e.g., 666666) and capped at the 99th percentile.
-   - Removed rows with unrealistic `Year_Birth` (e.g., <1900, if present).
-4. **Feature Engineering**:
-   - Created `TotalSpending` as the sum of all `Mnt*` columns.
-   - Added `TotalPurchases` as the sum of all `Num*Purchases` columns.
-   - Calculated `CustomerTenure` (days since `Dt_Customer` to March 21, 2025).
+
+1. **Feature Engineering**:
+   - Replaced `Age` in replacement of the `Year_birth` columns.
+   - Created `Total_Spending` as the sum of all `Mnt*` columns.
+   - Created `In_Relationship` to convert `Marital_Status` into 2 categories. 1: Married, Together, 0: Single, Divorced, Widow
+   - Created `Has_Children` as the binary to sum of all `Kidhome` and `Teenhome` columns. 1: sum >= 1, 0: sum = 0
+   - Created `Years_of_Education` as the sum of years of education completed.
+   - Added `TotalPurchases` as the sum of all `Num*Purchases` columns. TODO
+   - Calculated `CustomerTenure` (days since `Dt_Customer` to March 21, 2025). TODO
+  
+2. **Outliers**:
+   <br>
+      <img src="Images/boxplot-of-outliers.png" width="500">
+   <br>
+   - `Age`: 3 customers older than the upper limit of 74 years. We will not remove them
+   - `Income`: Several values are higher than the upper fence of 113k. While it is not impossible to have an income of 150k, we will remove the customer who has an income of 666k.
+   - `Total_Spending`: There is only one outlier that is at the upper fence limit. We will not remove it.
+  
+3. **Missing Values**:
+   - Identified missing values in `Income`.
+   - There are several ways to handle null values:
+        1. We can delete the entire column containing null-values
+        2. We can delete the rows containing null-values
+        3. We can impute the mean or median value
+        4. We can input the mean value of a specific population: in this case, we would split by Education diploma
+        5. We can use a model to predict missing values
+   
+   With our dataset, we will go for the `e` option and use the K-Nearest Neighbor Imputation.
+   KNN Imputation works by imputing the average income of the k nearest neighbors found in the training set for each of the missing values.
 
 ### Cleaned Dataset Summary
 - Rows: ~2240 (assuming minimal row loss after cleaning)
@@ -51,9 +66,9 @@ The dataset contains customer information with the following key columns:
 ### 1. Customer Demographics
 - **Age Distribution**: 
   - Histogram of age showed a peak around 40-60 years, with a long tail towards younger customers.
-  - Suggests a mature customer base with potential for targeting younger segments.
+  - Suggests a mature customer base with the potential for targeting younger segments.
 - **Income by Education**:
-  - Boxplot revealed PhD holders have the highest median income (~$65,000), followed by Master (~$60,000) and Graduation (~$50,000).
+  - Boxplot revealed PhD holders have the highest median income (~$65,000), followed by Master's (~$60,000) and Graduation (~$50,000).
   - Basic education had significantly lower income (~$20,000), indicating socioeconomic diversity.
 
 ### 2. Spending Patterns
