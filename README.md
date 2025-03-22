@@ -55,38 +55,109 @@ The dataset contains customer information with the following key columns:
    
    With our dataset, we will go for the `e` option and use the K-Nearest Neighbor Imputation.
    KNN Imputation works by imputing the average income of the k nearest neighbors found in the training set for each of the missing values.
+   ```python
+   from sklearn.impute import KNNImputer
 
-### Cleaned Dataset Summary
-- Rows: ~2240 (assuming minimal row loss after cleaning)
-- Columns: 29 (original) + 3 (engineered)
-- No missing values post-imputation.
+   Knn_imputer = KNNImputer()
+   Knn_imputer = KNNImputer(n_neighbors=5,metric='nan_euclidean')
+   # fit on the dataset
+   Knn_imputer.fit(df_select[['Income','Age','Years_of_Education', 'Total_Spending']])
+   # transform the dataset
+   X = Knn_imputer.transform(df_select[['Income','Age','Years_of_Education', 'Total_Spending']])
+   Income_impute=pd.DataFrame(X,columns=['Income','Age','Years_of_Education', 'Total_Spending'])
+   df_select['Income']=Income_impute['Income'].reset_index(drop=True)
+   count_nan = len(df_select) - df_select.count()
+   print(count_nan)
+   ```
+   ```
+   ID                     0
+   Year_Birth             0
+   Education              0
+   Marital_Status         0
+   Income                 0
+   ```
+   We do not have missing values.
 
 ## Visual Exploratory Data Analysis (EDA)
 
 ### 1. Customer Demographics
-- **Age Distribution**: 
+- **Age Distribution**:
+   <br>
+      <img src="Images/age-distribution.png" width="500">
+   <br>
   - Histogram of age showed a peak around 40-60 years, with a long tail towards younger customers.
   - Suggests a mature customer base with the potential for targeting younger segments.
 - **Income by Education**:
-  - Boxplot revealed PhD holders have the highest median income (~$65,000), followed by Master's (~$60,000) and Graduation (~$50,000).
+   <br>
+      <img src="Images/income-education.png" width="500">
+   <br>
+  - Boxplot revealed PhD holders have the highest median income (~$55,000), followed by Master's (~$53,000) and Graduation (~$52,000).
   - Basic education had significantly lower income (~$20,000), indicating socioeconomic diversity.
 
 ### 2. Spending Patterns
-- **Total Spending by Product Category**:
-  - Bar chart showed `MntWines` and `MntMeatProducts` dominate spending, averaging $300-$500 per customer, while `MntFruits` and `MntSweetProducts` are lower (~$20-$50).
-  - Opportunity to boost sales in underperforming categories.
+- **AVG Spending by Product Category**:
+   <br>
+      <img src="Images/income-productcategory.png" width="500">
+   <br>
+   ```
+   Spending Summary by Income Group and Product Category:
+   IncomeGroup       Low (<30k)  Medium (30k-60k)  High (60k-100k)  \
+   ProductCategory                                                   
+   MntFishProducts     7.960000         15.866142        77.228469   
+   MntFruits           5.698667         10.399606        54.773923   
+   MntGoldProds       16.853333         32.417323        70.261962   
+   MntMeatProducts    21.426667         58.787402       359.376794   
+   MntSweetProducts    6.133333         11.196850        55.301435   
+   MntWines           13.786667        169.256890       599.044258   
+   
+   IncomeGroup       Very High (>100k)  
+   ProductCategory                      
+   MntFishProducts                71.0  
+   MntFruits                      77.4  
+   MntGoldProds                  116.8  
+   MntMeatProducts               158.2  
+   MntSweetProducts              140.6  
+   MntWines                      533.6  
+   ```
+  - Bar chart showed `Wines` and `MeatProducts` dominate spending.
+  - Spending patterns shift from essentials like `MeatProducts` ($21.43) in the `Low (<30k)` group to `Wines` ($599.04) and `Sweets` ($140.60) in higher income groups. `Wines` dominate `High (60k-100k)` and `Very High (>100k)` spending, suggesting premium product opportunities.
 - **Spending vs. Income**:
-  - Scatter plot indicated a positive correlation (r ≈ 0.6) between `Income` and `TotalSpending`, though high-income outliers spent disproportionately on wines.
+   <br>
+      <img src="Images/income-totalspending.jpg" width="500">
+   <br>
+  - Scatter plot indicated a positive correlation (r ≈ 0.67) between `Income` and `TotalSpending`, though high-income outliers spent disproportionately on wines. TODO
 
 ### 3. Purchase Channels
 - **Purchases by Channel**:
-  - Stacked bar chart showed `NumStorePurchases` (avg. ~6) and `NumWebPurchases` (avg. ~4) lead, with `NumCatalogPurchases` (avg. ~2) lagging.
+   <br>
+      <img src="Images/purchase-channel.png" width="500">
+   <br>
+   ```
+   PurchaseChannel        AveragePurchases
+   ----------------------------------------
+   NumDealsPurchases      2.318100
+   NumWebPurchases        4.097670
+   NumCatalogPurchases    2.636201
+   NumStorePurchases      5.808244
+   ```
+  - The bar chart showed `NumStorePurchases` (avg. ~6) and `NumWebPurchases` (avg. ~4) lead, with `NumCatalogPurchases` (avg. ~2) lagging.
   - Suggests a preference for physical and web channels over catalogs.
 
-### 4. Campaign Effectiveness
+### 4. Campaign Effectiveness TODO
 - **Campaign Acceptance Rates**:
-  - Pie chart of `AcceptedCmp1-5` and `Response` showed low acceptance rates (~5-15% per campaign), with `Response` slightly higher (~15%).
-  - Indicates campaigns need improvement to engage customers.
+   <br>
+      <img src="Images/campaign-acceptance.png" width="500">
+   <br>
+   ```
+                 Campaign            AcceptanceRate
+   AcceptedCmp1  AcceptedCmp1        6.451613
+   AcceptedCmp2  AcceptedCmp2        1.344086
+   AcceptedCmp3  AcceptedCmp3        7.302867
+   AcceptedCmp4  AcceptedCmp4        7.482079
+   AcceptedCmp5  AcceptedCmp5        7.302867
+   ```
+  - The Pie chart of `AcceptedCmp1-5` showed low acceptance rates (~7% per campaign), with `AcceptedCmp2` significantly lower (~1%).
+  - Indicates company2 needs improvement to engage customers.
 
 ## Statistical Hypothesis Testing
 
